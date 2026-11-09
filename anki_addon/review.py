@@ -44,6 +44,7 @@ class ReviewSession:
         if not col.decks.is_filtered(session.deck_id) or session.deck_id != col.get_config("ankiAutoReviewDeck"):
             raise ValueError("The interrupted study deck is unavailable; open Anki to inspect it")
         session.previous_deck = data.get("previous_deck", 1)
+        session.day = data.get("day", col.sched.today)
         session.revision = data.get("revision", 0) + 1
         session.replays = dict(data.get("replay", []))
         # New token deliberately rejects requests sent before an add-on restart, including a pending write.
@@ -155,6 +156,8 @@ class ReviewSession:
             front=card.question(), back=card.answer(), css=note.note_type()["css"],
             home_deck=self.col.decks.name(card.odid or card.did), language=language,
             fields=dict(note.items()), intervals=list(self.col.sched.describe_next_states(item.states)),
+            question_audio=[tag.filename for tag in card.question_av_tags() if hasattr(tag,"filename")],
+            answer_audio=[tag.filename for tag in card.answer_av_tags() if hasattr(tag,"filename")],
             marked="marked" in note.tags, flag=card.user_flag())
 
     def act(self, data):

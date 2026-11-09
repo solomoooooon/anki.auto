@@ -121,6 +121,33 @@ class AnkiIntegrationTests(unittest.TestCase):
         sibling=next(cid for cid in added["card_ids"] if cid != before["card_id"])
         self.assertEqual(self.col.get_card(sibling).queue,-2)
 
+    def test_failed_start_does_not_leave_a_phantom_session(self):
+        self.add()
+        with self.assertRaises(ValueError):
+            self.service.dispatch("review_start",dict(deck_ids=[999999]))
+        self.assertFalse(self.service.dispatch("review_current",{})["active"])
+        self.assertTrue(self.service.dispatch("review_start",dict(deck_ids=[self.french]))["card_id"])
+
+    def test_native_audio_references_are_exposed(self):
+        result=self.add()
+        note=self.col.get_note(result["note_id"])
+        note["Front"] += " [sound:dog.mp3]"
+        self.col.update_note(note)
+        card=self.service.dispatch("review_start",dict(deck_ids=[self.french]))
+        self.assertEqual(card["question_audio"],["dog.mp3"])
+
+    def test_old_day_recovery_requires_a_new_queue(self):
+        import json
+        self.add()
+        self.service.dispatch("review_start",dict(deck_ids=[self.french]))
+        path=self.service.state_path
+        state=json.loads(path.read_text());state["day"]-=1;path.write_text(json.dumps(state))
+        recovered=AnkiService(self.col,"Disposable test")
+        with self.assertRaisesRegex(ValueError,"day changed"):
+            recovered.dispatch("review_start",dict(resume=True))
+        recovered.dispatch("review_end",{})
+        self.assertEqual(self.col.db.scalar("select count(*) from cards where odid != 0"),0)
+
 
 if __name__ == "__main__":
     unittest.main()

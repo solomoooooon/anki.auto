@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "anki.auto",
+  "description": "Capture English and French vocabulary and review your local Anki decks together.",
+  "version": "0.1.0",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["http://*/*", "https://*/*", "file:///*"],
+  "background": {"service_worker": "background.js", "type": "module"},
+  "action": {"default_popup": "popup.html", "default_title": "anki.auto"},
+  "options_page": "settings.html",
+  "content_scripts": [{"matches": ["http://*/*", "https://*/*", "file:///*"], "js": ["content.js"], "all_frames": true, "match_about_blank": true}],
+  "web_accessible_resources": [{"resources": ["capture.html", "capture.js", "style.css"], "matches": ["http://*/*", "https://*/*", "file:///*"]}],
+  "content_security_policy": {"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self' blob:;"}
+}

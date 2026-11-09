@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], "strict": true,
+    "skipLibCheck": true, "types": ["chrome"], "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["extension/src/**/*.ts"]
+}

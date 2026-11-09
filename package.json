@@ -1,0 +1,14 @@
+{
+  "name": "anki.auto",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test extension/tests/*.test.mjs",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {"@types/chrome": "0.3.7", "esbuild": "0.28.2", "typescript": "7.0.2"},
+  "dependencies": {"pdfjs-dist": "6.5.438", "tesseract.js": "7.0.0", "@tesseract.js-data/eng": "1.0.0", "@tesseract.js-data/fra": "1.0.0"}
+}

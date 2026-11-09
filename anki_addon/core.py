@@ -3,6 +3,7 @@ import hashlib
 import html
 import json
 import mimetypes
+import re
 from pathlib import Path
 
 try:
@@ -73,11 +74,10 @@ class AnkiService:
         return model
 
     def existing_capture(self, request_id):
-        if not isinstance(request_id, str) or len(request_id) > 100:
+        if not isinstance(request_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", request_id):
             raise ValueError("Invalid capture ID")
         # Search text is escaped and IDs are restricted by CaptureRequest at creation.
-        safe = request_id.replace('"', '\\"').replace("\\", "\\\\")
-        ids = self.col.find_notes(f'note:"{MODEL}" RequestId:"{safe}"')
+        ids = self.col.find_notes(f'note:"{MODEL}" RequestId:"{request_id}"')
         if not ids:
             return None
         note = self.col.get_note(ids[0])
@@ -188,12 +188,21 @@ class AnkiService:
                 raise ValueError("A review session is already active. Resume or end it first.")
             if self.recovery:
                 if data.get("resume"):
-                    self.session = ReviewSession.recover(self.col, self.recovery, self.state_path)
+                    candidate = ReviewSession.recover(self.col, self.recovery, self.state_path)
+                    result = candidate.current()
+                    self.session = candidate
                     self.recovery = None
-                    return self.session.current()
+                    return result
                 raise ValueError("An interrupted session exists. Resume or end it first.")
-            self.session = ReviewSession(self.col, self.state_path)
-            return self.session.start(data["deck_ids"])
+            candidate = ReviewSession(self.col, self.state_path)
+            try:
+                result = candidate.start(data["deck_ids"])
+            except Exception:
+                if candidate.deck_id:
+                    candidate.end(candidate.token)
+                raise
+            self.session = candidate
+            return result
         if action == "review_current":
             if not self.session:
                 return dict(active=False, recovery=bool(self.recovery))

@@ -48,9 +48,12 @@ def install():
             else:
                 from aqt.deckoptions import DeckOptionsDialog
                 card = current.session.current_card
-                DeckOptionsDialog(aqt.mw, card.odid or card.did)
+                DeckOptionsDialog(aqt.mw, current.col.decks.get_legacy(card.odid or card.did))
             return {"opened": True}
         result = current.dispatch(action, payload)
+        if isinstance(result, dict) and "space_rates" in result:
+            result["space_rates"] = aqt.mw.pm.spacebar_rates_card()
+            result["answer_keys"] = [aqt.mw.pm.get_answer_key(ease) or "" for ease in (1,2,3,4)]
         if action in ("add", "edit", "review_action", "review_end"):
             # Refresh deck counts without moving the desktop reviewer onto a different card.
             aqt.mw.requireReset()
