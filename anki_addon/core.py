@@ -5,8 +5,12 @@ import json
 import mimetypes
 from pathlib import Path
 
-from anki_auto.contracts import CaptureRequest, CardContent, text
-from anki_auto.matching import find_matches, fingerprint, plain
+try:
+    from ._shared.contracts import CaptureRequest, CardContent, text
+    from ._shared.matching import find_matches, fingerprint, plain
+except ImportError:
+    from anki_auto.contracts import CaptureRequest, CardContent, text
+    from anki_auto.matching import find_matches, fingerprint, plain
 from .review import ReviewSession
 
 MODEL = "anki.auto Vocabulary"
@@ -100,6 +104,10 @@ class AnkiService:
             if existing["request_hash"] != request_hash:
                 raise ValueError("This capture ID was already used for different content")
             return existing
+        if "matches_fingerprint" in data:
+            matches = self.dispatch("matches", dict(deck_id=request.deck_id, expression=request.expression))
+            if matches["fingerprint"] != data["matches_fingerprint"] or (matches["matches"] and not data.get("allow_matches")):
+                raise ValueError("Near matches changed before saving. Review the matches and retry.")
         note = self.col.new_note(self.model())
         values = dict(Front=content.front, Back=content.back, ExampleFront=content.example_front,
             ExampleBack=content.example_back, SourceTerm=request.expression, Language=content.language,
@@ -147,6 +155,21 @@ class AnkiService:
             if not kind.startswith(("image/", "audio/")):
                 raise ValueError("Only images and audio may be loaded")
             return dict(mime=kind, data=base64.b64encode(path.read_bytes()).decode("ascii"))
+        if action == "note":
+            note = self.col.get_note(int(data["note_id"]))
+            return dict(note_id=note.id, modified=note.mod, fields={key:plain(value) for key,value in note.items()
+                if key not in ("RequestId", "RequestHash")})
+        if action == "review_info":
+            if not self.session:
+                raise ValueError("No review session")
+            self.session.guard()
+            identifier = self.session.previous_card if data.get("previous") else self.session.current_id
+            if not identifier:
+                raise ValueError("No card information available")
+            card = self.col.get_card(identifier)
+            return dict(card_id=card.id, note_id=card.nid, deck=self.col.decks.name(card.odid or card.did),
+                interval=card.ivl, reviews=card.reps, lapses=card.lapses, ease=card.factor,
+                due=card.odue or card.due)
         if action == "edit":
             note = self.col.get_note(int(data["note_id"]))
             if data.get("modified") is not None and data["modified"] != note.mod:
