@@ -1,0 +1,201 @@
+<div id="anki-auto-design-preview" aria-label="anki.auto interactive design preview">
+  <style>
+    #anki-auto-design-preview { color-scheme: light dark; --aa-bg: light-dark(#f4f3ef,#1c1e1c); --aa-paper: light-dark(#ffffff,#262925); --aa-ink: light-dark(#24332b,#edf1e9); --aa-soft: light-dark(#667267,#b2bcb0); --aa-line: light-dark(#dedfd7,#444b41); --aa-green: light-dark(#315b43,#b3d0ae); --aa-on-green: light-dark(#ffffff,#20351f); --aa-highlight: light-dark(#dde9b8,#4d6033); --aa-warning: light-dark(#fff6dc,#3d3520); font: 15px/1.5 system-ui,sans-serif; color: var(--aa-ink); }
+    #anki-auto-design-preview * { box-sizing: border-box; }
+    #anki-auto-design-preview [hidden] { display:none !important; }
+    #anki-auto-design-preview button, #anki-auto-design-preview input, #anki-auto-design-preview select, #anki-auto-design-preview textarea { font: inherit; color: inherit; }
+    #anki-auto-design-preview button { cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid var(--aa-line); border-radius: 8px; background: var(--aa-paper); }
+    #anki-auto-design-preview button:disabled { opacity: .5; cursor: default; }
+    #anki-auto-design-preview .aa-primary { background: var(--aa-green); color: var(--aa-on-green); border-color: var(--aa-green); }
+    #anki-auto-design-preview .aa-quiet { background: transparent; border-color: transparent; }
+    #anki-auto-design-preview .aa-shell { background: var(--aa-bg); border: 1px solid var(--aa-line); border-radius: 14px; overflow: hidden; }
+    #anki-auto-design-preview .aa-header { display: flex; gap: 16px; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--aa-line); background: var(--aa-paper); flex-wrap: wrap; }
+    #anki-auto-design-preview .aa-brand { font-weight: 650; letter-spacing: -.04em; font-size: 21px; margin-right: 12px; }
+    #anki-auto-design-preview .aa-nav { display: flex; gap: 4px; }
+    #anki-auto-design-preview .aa-nav button { background: transparent; border-color: transparent; }
+    #anki-auto-design-preview .aa-nav button[aria-selected="true"] { color: var(--aa-green); background: var(--aa-highlight); }
+    #anki-auto-design-preview .aa-status { margin-left:auto; font-size: 12px; color:var(--aa-soft); padding-right: 80px; }
+    #anki-auto-design-preview .aa-screen { padding: 26px; min-height: 620px; }
+    #anki-auto-design-preview .aa-reading { max-width: 680px; margin: 0 auto 24px; }
+    #anki-auto-design-preview .aa-reading-label { color: var(--aa-soft); font-size: 12px; margin: 0 0 7px; }
+    #anki-auto-design-preview .aa-passage { margin:0; font: 21px/1.7 Georgia,serif; }
+    #anki-auto-design-preview .aa-selection { background:var(--aa-highlight); border-radius:3px; padding:2px 4px; position:relative; white-space:nowrap; }
+    #anki-auto-design-preview .aa-check { position:absolute; left:100%; bottom:85%; margin-left:3px; padding:0; width:30px; min-height:30px; border-radius:7px; background:var(--aa-green); color:var(--aa-on-green); line-height:1; }
+    #anki-auto-design-preview .aa-workspace { display:grid; grid-template-columns:minmax(0,440px) minmax(0,260px); gap:16px; align-items:start; justify-content:center; }
+    #anki-auto-design-preview .aa-modal { background: var(--aa-paper); border:1px solid var(--aa-line); border-radius:12px; padding:22px; }
+    #anki-auto-design-preview .aa-title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    #anki-auto-design-preview h2 { font-size:20px; font-weight:600; margin:0; }
+    #anki-auto-design-preview h3 { font-size:15px; font-weight:600; margin:0 0 8px; }
+    #anki-auto-design-preview .aa-title-row button { min-height:30px; padding:2px 9px; }
+    #anki-auto-design-preview .aa-field { display:block; margin-bottom:15px; }
+    #anki-auto-design-preview .aa-label { display:block; font-size:12px; font-weight:600; margin-bottom:6px; }
+    #anki-auto-design-preview input:not([type="checkbox"]), #anki-auto-design-preview select, #anki-auto-design-preview textarea { width:100%; border:1px solid var(--aa-line); border-radius:7px; background:var(--aa-bg); padding:9px 11px; }
+    #anki-auto-design-preview textarea { resize:vertical; min-height:74px; }
+    #anki-auto-design-preview .aa-two { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:12px; }
+    #anki-auto-design-preview .aa-hint { font-size:12px; color:var(--aa-soft); margin:5px 0 0; }
+    #anki-auto-design-preview details { margin:0 0 18px; }
+    #anki-auto-design-preview summary { color:var(--aa-soft); font-size:12px; cursor:pointer; margin-bottom:8px; }
+    #anki-auto-design-preview .aa-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-top:16px; }
+    #anki-auto-design-preview .aa-match { background:var(--aa-warning); border:1px solid var(--aa-line); border-radius:12px; padding:18px; }
+    #anki-auto-design-preview .aa-match p { margin:4px 0; overflow-wrap:anywhere; }
+    #anki-auto-design-preview .aa-match-term { font-size:20px; font-family:Georgia,serif; }
+    #anki-auto-design-preview .aa-match .aa-actions { justify-content:flex-start; }
+    #anki-auto-design-preview .aa-saved { margin-top:18px; padding-top:15px; border-top:1px solid var(--aa-line); }
+    #anki-auto-design-preview .aa-saved dl { display:grid; grid-template-columns:48px 1fr; gap:8px; margin:12px 0 0; }
+    #anki-auto-design-preview .aa-saved dt { color:var(--aa-soft); font-size:12px; }
+    #anki-auto-design-preview .aa-saved dd { margin:0; overflow-wrap:anywhere; }
+    #anki-auto-design-preview .aa-review-top { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; max-width:720px; margin:0 auto 24px; }
+    #anki-auto-design-preview .aa-review-sub { color:var(--aa-soft); font-size:12px; margin-top:4px; }
+    #anki-auto-design-preview .aa-decks { max-width:600px; margin:0 auto 22px; background:var(--aa-paper); border:1px solid var(--aa-line); border-radius:12px; padding:20px; }
+    #anki-auto-design-preview .aa-deck-option { display:flex; gap:10px; padding:10px 0; align-items:center; }
+    #anki-auto-design-preview .aa-deck-option small { margin-left:auto; color:var(--aa-soft); }
+    #anki-auto-design-preview .aa-study { background:var(--aa-paper); border:1px solid var(--aa-line); border-radius:12px; max-width:600px; margin:auto; padding:28px; text-align:center; }
+    #anki-auto-design-preview .aa-card-language { color:var(--aa-soft); font-size:12px; margin-bottom:22px; }
+    #anki-auto-design-preview .aa-prompt { font:var(--aa-card-size,30px)/1.4 Georgia,serif; margin:12px 0 26px; overflow-wrap:anywhere; }
+    #anki-auto-design-preview .aa-answer { font:var(--aa-card-size,30px)/1.4 Georgia,serif; border-top:1px solid var(--aa-line); padding-top:24px; margin:0 0 26px; overflow-wrap:anywhere; }
+    #anki-auto-design-preview .aa-ratings { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:24px; }
+    #anki-auto-design-preview .aa-ratings button { padding:10px 5px; }
+    #anki-auto-design-preview .aa-ratings small { display:block; font-size:11px; opacity:.75; }
+    #anki-auto-design-preview .aa-review-bottom { max-width:600px; margin:16px auto 0; display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
+    #anki-auto-design-preview .aa-event { font-size:12px; color:var(--aa-soft); }
+    #anki-auto-design-preview .aa-toolbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:22px; }
+    #anki-auto-design-preview .aa-capture-toggle { display:flex; gap:8px; align-items:center; font-size:13px; }
+    #anki-auto-design-preview .aa-capture-toggle input { accent-color:var(--aa-green); width:16px; height:16px; }
+    @media(max-width:700px) { #anki-auto-design-preview .aa-status {padding-right:0;} #anki-auto-design-preview .aa-workspace {grid-template-columns:minmax(0,440px);} #anki-auto-design-preview .aa-screen {padding:18px;min-height:650px;} #anki-auto-design-preview .aa-header {padding:12px 16px;gap:8px;} }
+    @media(max-width:400px) { #anki-auto-design-preview .aa-two {grid-template-columns:1fr;gap:0;} #anki-auto-design-preview .aa-modal {padding:16px;} #anki-auto-design-preview .aa-study {padding:20px 14px;} #anki-auto-design-preview .aa-ratings {gap:5px;} #anki-auto-design-preview .aa-header {gap:6px;} #anki-auto-design-preview .aa-status {width:100%;margin-left:0;} }
+    @media(pointer:coarse) { #anki-auto-design-preview button {min-height:44px;} #anki-auto-design-preview input:not([type="checkbox"]), #anki-auto-design-preview textarea, #anki-auto-design-preview select {font-size:16px;} }
+  </style>
+  <div class="aa-shell">
+    <header class="aa-header">
+      <span class="aa-brand">anki.auto</span>
+      <nav class="aa-nav" aria-label="Preview screens">
+        <button type="button" id="aa-capture-tab" aria-selected="true" aria-controls="aa-capture">Capture</button>
+        <button type="button" id="aa-review-tab" aria-selected="false" aria-controls="aa-review">Review</button>
+      </nav>
+      <span class="aa-status">Design preview · sample cards</span>
+    </header>
+    <section id="aa-capture" class="aa-screen" aria-label="Capture screen">
+      <div class="aa-toolbar">
+        <label class="aa-capture-toggle"><input type="checkbox" id="aa-capture-active" checked> Capture enabled</label>
+        <button type="button" id="aa-screenshot">Screenshot</button>
+      </div>
+      <div class="aa-reading">
+        <p class="aa-reading-label">READING · UNE PROMENADE</p>
+        <p class="aa-passage">En sortant de la maison, elle a aperçu un <span class="aa-selection">chien<button type="button" class="aa-check" id="aa-selection-check" aria-label="Create card from selected text">✓</button></span> qui attendait près du portail.</p>
+      </div>
+      <div class="aa-workspace">
+        <form class="aa-modal" id="aa-capture-modal" aria-label="New vocabulary card">
+          <div class="aa-title-row"><h2>New card</h2><button type="button" class="aa-quiet" id="aa-close" aria-label="Close capture modal">×</button></div>
+          <label class="aa-field"><span class="aa-label">Word or expression</span><input id="aa-expression" value="chien"></label>
+          <div class="aa-two">
+            <label class="aa-field"><span class="aa-label">Destination deck</span><select id="aa-destination"><option>Français · Lectures</option><option>English · Vocabulary</option></select></label>
+            <label class="aa-field"><span class="aa-label">Language</span><select id="aa-language"><option>Auto · French</option><option>French</option><option>English</option></select></label>
+          </div>
+          <label class="aa-field"><span class="aa-label">Custom definition <span style="font-weight:400">(optional)</span></span><textarea id="aa-definition" placeholder="Leave blank to generate on Send"></textarea><span class="aa-hint">Your definition skips automatic lookup.</span></label>
+          <details><summary>Sentence context</summary><textarea id="aa-context" aria-label="Sentence context">En sortant de la maison, elle a aperçu un chien qui attendait près du portail.</textarea></details>
+          <div class="aa-actions"><button type="button" class="aa-quiet" id="aa-cancel">Cancel</button><button type="submit" class="aa-primary" id="aa-send">Send</button></div>
+          <div class="aa-saved" id="aa-saved" hidden aria-live="polite"><h3>Saved to <span id="aa-saved-deck">Français · Lectures</span></h3><dl><dt>Front</dt><dd id="aa-saved-front">the dog</dd><dt>Back</dt><dd id="aa-saved-back">le chien</dd></dl><div class="aa-actions"><button type="button" id="aa-edit">Edit card</button></div></div>
+        </form>
+        <aside class="aa-match" id="aa-match" hidden aria-label="Near-match confirmation" role="alert">
+          <h3>Already in this deck</h3>
+          <p class="aa-match-term">le chien</p><p>the dog</p><p class="aa-hint" id="aa-match-deck">Français · Lectures</p>
+          <div class="aa-actions"><button type="button" id="aa-continue" class="aa-primary">Continue anyway</button><button type="button" id="aa-match-cancel">Cancel</button></div>
+        </aside>
+      </div>
+      <p id="aa-capture-feedback" class="aa-event" role="status" style="text-align:center;margin-top:18px"></p>
+    </section>
+    <section id="aa-review" class="aa-screen" aria-label="Combined review screen" hidden>
+      <div class="aa-review-top"><div><h2>Combined review</h2><div class="aa-review-sub" id="aa-session-label">2 decks · 24 cards available</div></div><button type="button" id="aa-change-decks">Choose decks</button></div>
+      <div class="aa-decks" id="aa-decks" hidden>
+        <h3>Review together</h3>
+        <label class="aa-deck-option"><input type="checkbox" checked data-aa-deck="french"> Français · Lectures <small>16 due</small></label>
+        <label class="aa-deck-option"><input type="checkbox" checked data-aa-deck="english"> English · Vocabulary <small>8 due</small></label>
+        <div class="aa-actions"><button type="button" class="aa-primary" id="aa-start">Start review</button></div>
+      </div>
+      <div id="aa-review-session">
+        <div class="aa-study" id="aa-study" aria-label="Review card">
+          <div class="aa-card-language" id="aa-card-language">French · Français / Lectures</div>
+          <div class="aa-prompt" id="aa-prompt">the dog</div>
+          <div class="aa-answer" id="aa-answer" hidden>le chien</div>
+          <button type="button" class="aa-primary" id="aa-reveal">Show answer <span style="opacity:.7">↵</span></button>
+          <div class="aa-ratings" id="aa-ratings" hidden>
+            <button type="button" data-aa-rating="Again">Again<small>1 · &lt;1m</small></button>
+            <button type="button" data-aa-rating="Hard">Hard<small>2 · 2d</small></button>
+            <button type="button" data-aa-rating="Good" class="aa-primary">Good<small>3 · 4d</small></button>
+            <button type="button" data-aa-rating="Easy">Easy<small>4 · 8d</small></button>
+          </div>
+        </div>
+        <div class="aa-review-bottom"><button type="button" id="aa-undo" class="aa-quiet" disabled>Undo</button><span class="aa-event" id="aa-review-feedback" aria-live="polite">0 reviewed</span><button type="button" id="aa-end" class="aa-quiet">End session</button></div>
+      </div>
+    </section>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById('anki-auto-design-preview');
+      const el = id => root.querySelector('#' + id);
+      let captureOpen = true;
+      let needsConfirmation = true;
+      let count = 0;
+      let revealed = false;
+      const cards = [
+        {front:'the dog',back:'le chien',language:'French · Français / Lectures'},
+        {front:'a deep, lasting feeling of bitterness',back:'rancor',language:'English · Vocabulary'},
+        {front:'…wanted to do the same thing…',back:'…a voulu faire la même chose…',language:'French · Français / Lectures'}
+      ];
+      function setScreen(name) {
+        ['capture','review'].forEach(n => {el('aa-'+n).hidden=n!==name;el('aa-'+n+'-tab').setAttribute('aria-selected',String(n===name));});
+      }
+      el('aa-capture-tab').onclick=()=>setScreen('capture');
+      el('aa-review-tab').onclick=()=>setScreen('review');
+      function dismiss() {captureOpen=false;el('aa-capture-modal').hidden=true;el('aa-match').hidden=true;}
+      el('aa-close').onclick=dismiss;
+      el('aa-cancel').onclick=dismiss;
+      el('aa-selection-check').onclick=()=>{captureOpen=true;el('aa-capture-modal').hidden=false;el('aa-capture-feedback').textContent='';};
+      el('aa-capture-active').onchange=e=>{el('aa-selection-check').hidden=!e.target.checked;if(!e.target.checked)dismiss();};
+      function resetMatch() {needsConfirmation=true;el('aa-match').hidden=true;el('aa-saved').hidden=true;el('aa-send').disabled=false;}
+      el('aa-expression').oninput=resetMatch;
+      el('aa-destination').onchange=resetMatch;
+      function save() {
+        const expression=el('aa-expression').value.trim();
+        const custom=el('aa-definition').value.trim();
+        el('aa-saved-front').textContent=custom||(expression.toLowerCase().includes('chien')?'the dog':'…wanted to do the same thing…');
+        el('aa-saved-back').textContent=custom?expression:(expression.toLowerCase().includes('chien')?'le chien':'…a voulu faire la même chose…');
+        el('aa-saved-deck').textContent=el('aa-destination').value;
+        el('aa-saved').hidden=false;el('aa-match').hidden=true;el('aa-send').disabled=true;
+        el('aa-capture-feedback').textContent=custom?'Preview: saved using your definition.':'Preview: generated and saved.';
+      }
+      el('aa-capture-modal').onsubmit=e=>{
+        e.preventDefault();
+        if(!el('aa-expression').value.trim()) {el('aa-expression').focus();return;}
+        if(needsConfirmation&&el('aa-expression').value.toLowerCase().includes('chien')&&el('aa-destination').selectedIndex===0){el('aa-match').hidden=false;el('aa-match-deck').textContent=el('aa-destination').value;el('aa-continue').focus();return;}
+        save();
+      };
+      el('aa-continue').onclick=()=>{needsConfirmation=false;save();};
+      el('aa-match-cancel').onclick=()=>{el('aa-match').hidden=true;el('aa-send').focus();};
+      el('aa-edit').onclick=()=>{el('aa-definition').value=el('aa-saved-front').textContent;el('aa-expression').value=el('aa-saved-back').textContent;el('aa-send').disabled=false;el('aa-saved').hidden=true;el('aa-definition').focus();};
+      el('aa-screenshot').onclick=()=>{captureOpen=true;el('aa-capture-modal').hidden=false;el('aa-expression').value='a voulu faire la même chose';el('aa-context').value='Elle a voulu faire la même chose que son frère.';el('aa-definition').value='';resetMatch();el('aa-capture-feedback').textContent='Preview: text extracted from a screenshot. You can edit it before sending.';};
+      function updateCard() {
+        const card=cards[count%cards.length];
+        el('aa-prompt').textContent=card.front;el('aa-answer').textContent=card.back;el('aa-card-language').textContent=card.language;
+        revealed=false;el('aa-answer').hidden=true;el('aa-ratings').hidden=true;el('aa-reveal').hidden=false;el('aa-undo').disabled=count===0;
+      }
+      function reveal(){revealed=true;el('aa-answer').hidden=false;el('aa-ratings').hidden=false;el('aa-reveal').hidden=true;}
+      el('aa-reveal').onclick=reveal;
+      function rate(rating){if(!revealed)return;count++;updateCard();el('aa-review-feedback').textContent=count+' reviewed · '+rating+' recorded';}
+      root.querySelectorAll('[data-aa-rating]').forEach(button=>button.onclick=()=>rate(button.dataset.aaRating));
+      el('aa-undo').onclick=()=>{if(count>0){count--;updateCard();el('aa-review-feedback').textContent=count+' reviewed · Last rating undone';}};
+      el('aa-change-decks').onclick=()=>{el('aa-decks').hidden=!el('aa-decks').hidden;};
+      el('aa-start').onclick=()=>{const selected=root.querySelectorAll('[data-aa-deck]:checked').length;if(!selected)return;el('aa-decks').hidden=true;el('aa-review-session').hidden=false;el('aa-session-label').textContent=selected+' deck'+(selected===1?'':'s')+' · Mixed queue';updateCard();};
+      el('aa-end').onclick=()=>{el('aa-review-session').hidden=true;el('aa-decks').hidden=false;el('aa-session-label').textContent='Session ended · '+count+' reviewed';};
+      root.addEventListener('keydown',event=>{
+        if(/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName))return;
+        if(!el('aa-review').hidden&&!el('aa-review-session').hidden){if(event.code==='Space'){event.preventDefault();if(!revealed)reveal();}const index=Number(event.key)-1;if(revealed&&index>=0&&index<4)rate(['Again','Hard','Good','Easy'][index]);}
+        if(event.key==='Escape'&&captureOpen)dismiss();
+      });
+      const design={cardText:30};
+      function renderDesign(){el('aa-study').style.setProperty('--aa-card-size',design.cardText+'px');}
+      renderDesign();
+      if(globalThis.Tweak){const tweak=new Tweak({container:el('aa-study'),onChange:renderDesign});tweak.addSlider(design,'cardText',{label:'Card text size',min:22,max:36,step:1,unit:'px'});}
+    })();
+  </script>
+</div>

@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.superpowers/
+.worktrees/
+dist/
+extension/dist/
+*.anki2
+*.anki2-*
+*.log
+.env
