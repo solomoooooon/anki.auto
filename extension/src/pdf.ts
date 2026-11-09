@@ -43,7 +43,16 @@ document.addEventListener("selectionchange",()=>{
   marker.style.left=pos.left+"px";marker.style.top=pos.top+"px";marker.hidden=false;
 });
 marker.onpointerdown=event=>event.preventDefault();
-marker.onclick=async()=>{try{await message({kind:"create_draft",draft:{expression,context,source_url:source,source_title:`PDF · page ${pageNumber}`}});marker.hidden=true;}catch(error){notify(error);}};
+marker.onclick=async()=>{
+  try{
+    const value=await message<{id:string;url:string}>( {kind:"capture",draft:{expression,context,source_url:source,source_title:`PDF · page ${pageNumber}`}});
+    const overlay=document.createElement("div");overlay.className="capture-overlay";
+    const frame=document.createElement("iframe");frame.src=value.url;frame.title="Add vocabulary to Anki";overlay.append(frame);document.body.append(overlay);
+    const close=()=>{overlay.remove();window.removeEventListener("message",listener);};
+    const listener=(event:MessageEvent)=>{if(event.source===frame.contentWindow&&event.origin===location.origin&&event.data?.kind==="anki-auto-close"&&event.data.id===value.id)close();};
+    window.addEventListener("message",listener);overlay.onclick=event=>{if(event.target===overlay)close();};marker.hidden=true;
+  }catch(error){notify(error);}
+};
 element("ocr").onclick=async()=>{
   const id=crypto.randomUUID();await chrome.storage.session.set({["shot:"+id]:canvas.toDataURL("image/png")});
   await chrome.tabs.create({url:"ocr.html#id="+id+"&source="+encodeURIComponent(source)});

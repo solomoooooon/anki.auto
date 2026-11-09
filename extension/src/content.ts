@@ -13,6 +13,10 @@ const overlay=document.createElement("div");overlay.className="overlay";overlay.
 root.append(style,marker,overlay);
 document.documentElement.append(host);
 function dismiss(){overlay.replaceChildren();overlay.hidden=true;marker.hidden=true;}
+function display(id:string,url:string){
+  draftId=id;const frame=document.createElement("iframe");frame.src=url;frame.title="Add vocabulary to Anki";
+  overlay.replaceChildren(frame);overlay.hidden=false;marker.hidden=true;
+}
 function update(){
   if(!enabled||!overlay.hidden)return;
   const selection=window.getSelection();
@@ -33,9 +37,8 @@ marker.addEventListener("click",async()=>{
     const response=await chrome.runtime.sendMessage({kind:"capture",draft:{expression:savedText,context,
       source_url:location.href,source_title:document.title,detected_language:document.documentElement.lang.slice(0,2).toLowerCase()}});
     if(!response.ok)throw new Error(response.error);
-    draftId=response.result.id;
-    const frame=document.createElement("iframe");frame.src=response.result.url;frame.title="Add vocabulary to Anki";
-    overlay.replaceChildren(frame);overlay.hidden=false;marker.hidden=true;
+    marker.hidden=true;
+    if(!response.result.displayed)display(response.result.id,response.result.url);
   }catch(error){marker.title=error instanceof Error?error.message:"Open anki.auto from the toolbar";}
   finally{marker.disabled=false;}
 });
@@ -47,5 +50,8 @@ window.addEventListener("scroll",update,{passive:true});
 window.addEventListener("resize",update);
 overlay.addEventListener("click",event=>{if(event.target===overlay)dismiss();});
 chrome.storage.onChanged.addListener((changes,area)=>{if(area==="local"&&changes.enabled){enabled=Boolean(changes.enabled.newValue);if(!enabled)dismiss();}});
-chrome.runtime.onMessage.addListener(msg=>{if(msg.kind==="dismiss_capture"&&msg.id===draftId)dismiss();});
+chrome.runtime.onMessage.addListener((msg,_sender,reply)=>{
+  if(msg.kind==="dismiss_capture"&&msg.id===draftId)dismiss();
+  if(msg.kind==="display_capture"){display(msg.id,msg.url);reply({displayed:true});}
+});
 chrome.runtime.sendMessage({kind:"state"}).then(response=>{enabled=Boolean(response?.result?.enabled);}).catch(()=>{});

@@ -36,7 +36,10 @@ chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
         source_url:String(source.source_url||sender.url||"").slice(0,4000),source_title:String(source.source_title||"").slice(0,500),
         detected_language:["en","fr"].includes(source.detected_language||"")?source.detected_language:"",host_tab:sender.tab?.id};
       const id=await draftStore(draft);
-      return {ok:true,result:{id,url:chrome.runtime.getURL("capture.html")+"#draft="+id+"&modal=1"}};
+      const url=chrome.runtime.getURL("capture.html")+"#draft="+id+"&modal=1";
+      let displayed=false;
+      if(sender.tab?.id!==undefined){try{const response=await chrome.tabs.sendMessage(sender.tab.id,{kind:"display_capture",id,url},{frameId:0});displayed=Boolean(response?.displayed);}catch{}}
+      return {ok:true,result:{id,url,displayed}};
     }
     if(!own(sender))throw new Error("This operation is available only inside the extension.");
     if(msg.kind==="api")return request(msg.path,msg.method,msg.data);
