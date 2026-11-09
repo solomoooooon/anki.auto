@@ -10,39 +10,48 @@ const labels=["Again","Hard","Good","Easy"];
 function locked(value:boolean){busy=value;document.querySelectorAll<HTMLButtonElement>("#ratings button,#reveal,#undo,#edit").forEach(button=>button.disabled=value);}
 function failure(error:unknown){blocked=true;locked(false);notify(error);element("resume").hidden=false;element("end").hidden=false;element("retry").hidden=!pending;}
 async function show(value:CardSnapshot){
-  clearTimeout(pollTimer);snapshot=value;answerVisible=false;blocked=false;pending=null;locked(false);
+  clearTimeout(pollTimer);++renderSequence;frame.onload=null;frame.hidden=true;frame.srcdoc="";
+  snapshot=value;answerVisible=false;blocked=false;pending=null;locked(true);
   element("status").textContent="";for(const id of ["resume","retry","end"])element(id).hidden=true;
   element("chooser").hidden=value.active;element("study").hidden=!value.active;
   element("more-menu").hidden=true;element("more").setAttribute("aria-expanded","false");
-  if(!value.active){element("recover").hidden=!value.recovery;element("finish-old").hidden=!value.recovery;return;}
+  if(!value.active){element("recover").hidden=!value.recovery;element("finish-old").hidden=!value.recovery;locked(false);return;}
   started=performance.now();element<HTMLButtonElement>("undo").disabled=!value.can_undo;
   element("home").textContent=value.card_id?value.home_deck:"Combined queue";
   element("counts").textContent=`${value.counts.new} new · ${value.counts.learning} learning · ${value.counts.review} review`;
-  element("empty").hidden=Boolean(value.card_id);frame.hidden=!value.card_id;
+  element("empty").hidden=Boolean(value.card_id);
   element("reveal").hidden=!value.card_id;element("ratings").hidden=true;
   element<HTMLButtonElement>("edit").disabled=!value.card_id;
   if(!value.card_id){
-    element("empty").textContent=value.finished?"You’re done for now.":"Waiting for the next learning card. Keep this tab open, or return later.";
-    if(!value.finished)pollTimer=setTimeout(()=>void refresh(),15000);
+    element("empty").textContent=value.finished?"You’re done for now.":`Next learning card around ${new Date((value.next_due||Date.now()/1000)*1000).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}. Keep this tab open, or return later.`;
+    if(!value.finished)pollTimer=setTimeout(()=>void refresh(),Math.min(15000,Math.max(1000,((value.next_due||0)*1000-Date.now()))));
+    locked(false);element<HTMLButtonElement>("undo").disabled=!value.can_undo;
     return;
   }
   element<HTMLSelectElement>("flag").value=String(value.flag);
   element<HTMLButtonElement>("more").textContent=value.marked?"More ★":"More M";
   element("ratings").querySelectorAll("button").forEach((button,index)=>{button.querySelector("small")!.textContent=`${value.answer_keys?.[index]||index+1} · ${value.intervals[index]||""}`;button.setAttribute("aria-label",labels[index]+" "+(value.intervals[index]||""));});
   await renderCard();
+  locked(false);element<HTMLButtonElement>("undo").disabled=!value.can_undo;
 }
 async function renderCard(){
   if(!snapshot?.card_id)return;
   const seq=++renderSequence,value=snapshot;
+  frame.hidden=true;
   const html=await cardDocument(answerVisible?value.back:value.front,value.css,(answerVisible?value.answer_audio:value.question_audio)||[]);
   if(seq!==renderSequence)return;
-  frame.onload=()=>{
+  await new Promise<void>(resolve=>{frame.onload=()=>{
+    if(seq!==renderSequence){resolve();return;}
     const document=frame.contentDocument;if(!document)return;
+    if(document.documentElement.getAttribute("data-anki-render")!==String(seq))return;
+    frame.hidden=false;
     frame.style.height=Math.max(170,document.documentElement.scrollHeight+16)+"px";
     document.addEventListener("keydown",onKey);
     const images=document.querySelectorAll("img");images.forEach(img=>img.onload=()=>frame.style.height=Math.max(170,document.documentElement.scrollHeight+16)+"px");
+    resolve();
   };
-  frame.srcdoc=html;
+  frame.srcdoc=html.replace("<html",`<html data-anki-render="${seq}"`);
+  });
 }
 async function refresh(){try{await show(await api<CardSnapshot>("/review/current"));}catch(error){failure(error);}}
 async function rateAction(action:string,extra:Record<string,unknown>={}){
@@ -55,7 +64,11 @@ async function transmit(){
   if(!pending||busy)return;locked(true);element("retry").hidden=true;
   try{await show(await api<CardSnapshot>("/review/action",pending));}catch(error){failure(error);}
 }
-async function reveal(){if(busy||blocked||!snapshot?.card_id||answerVisible)return;answerVisible=true;element("reveal").hidden=true;element("ratings").hidden=false;await renderCard();}
+async function reveal(){
+  if(busy||blocked||!snapshot?.card_id||answerVisible)return;
+  locked(true);answerVisible=true;element("reveal").hidden=true;
+  try{await renderCard();element("ratings").hidden=false;locked(false);}catch(error){failure(error);}
+}
 async function end(){
   if(busy)return;locked(true);
   try{await api("/review/end",{session:snapshot?.session});await loadDecks();await refresh();}catch(error){failure(error);}

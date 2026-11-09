@@ -29,6 +29,7 @@ Requires **Anki 25.09.5 or compatible newer desktop Anki**, **Python 3.11+**, **
 - Similar expressions are checked only in the exact destination deck, including cards temporarily being reviewed in a filtered deck. An alert shows near matches and asks **Continue anyway**. Changing the term/deck or a matching note requires another confirmation. It never silently merges cards.
 - Captures retain their draft, job ID, and result across tab closure. **Reopen last capture** resumes it. Retrying an uncertain save uses the same request ID to prevent duplicate notes. Editing the draft creates a new capture ID.
 - Anki must be open. If Anki is busy with a blocking dialog, close it and retry. The active Anki profile determines which collection is used.
+- Each capture is bound to the collection from which its destination was selected. Switching profiles while generation runs stops the save; reopen the original profile and retry.
 
 ## PDFs and screenshots
 
@@ -92,5 +93,7 @@ Native integration tests need Anki’s Python (ordinary Python skips them):
 ```
 
 Tests create disposable collections; they do not open your collection. Mockups: `docs/mockups/anki-auto-preview-v2-standalone.html`. Spec/implementation plan: `docs/superpowers/`. Bundled asset licenses are in `dist/extension/licenses` and `THIRD-PARTY.txt`.
+
+Validation evidence and the remaining Chrome interaction checklist: [`docs/verification.md`](docs/verification.md). Automated checks do not establish browser interaction or visual quality.
 
 To uninstall, end any active browser session first, remove the extension/add-on, and stop the backend. Vocabulary notes remain normal Anki notes. If a crash left cards in the managed filtered deck, empty that deck from Anki to return them home before deleting it.

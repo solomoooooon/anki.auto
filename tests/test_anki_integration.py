@@ -148,6 +148,46 @@ class AnkiIntegrationTests(unittest.TestCase):
         recovered.dispatch("review_end",{})
         self.assertEqual(self.col.db.scalar("select count(*) from cards where odid != 0"),0)
 
+    def test_home_daily_limit_survives_multiple_sessions_and_undo(self):
+        parent=self.col.decks.id("Languages")
+        child=self.col.decks.id("Languages::French")
+        config=self.col.decks.config_dict_for_deck_id(parent)
+        config["new"]["perDay"]=2
+        self.col.decks.update_config(config)
+        for index in range(5):self.add(f"daily{index}",child)
+        card=self.service.dispatch("review_start",dict(deck_ids=[child]))
+        for index in range(2):
+            card=self.service.dispatch("review_action",dict(session=card["session"],revision=card["revision"],
+                card_id=card["card_id"],action_id=f"daily-rate{index}",action="rate",rating=4))
+        self.assertEqual(self.col.decks.get_legacy(parent)["newToday"][1],2)
+        self.assertEqual(self.col.decks.get_legacy(child)["newToday"][1],2)
+        card=self.service.dispatch("review_action",dict(session=card["session"],revision=card["revision"],
+            card_id=card.get("card_id"),action_id="daily-undo",action="undo"))
+        self.assertEqual(self.col.decks.get_legacy(parent)["newToday"][1],1)
+        card=self.service.dispatch("review_action",dict(session=card["session"],revision=card["revision"],
+            card_id=card["card_id"],action_id="daily-rerate",action="rate",rating=4))
+        self.service.dispatch("review_end",dict(session=card["session"]))
+        self.col.decks.set_current(child)
+        self.assertEqual(self.col.sched.get_queued_cards().new_count,0)
+        next_session=self.service.dispatch("review_start",dict(deck_ids=[child]))
+        self.assertIsNone(next_session["card_id"])
+
+    def test_future_learning_is_pending_even_outside_collapse_window(self):
+        self.col.set_config("collapseTime",0)
+        self.add()
+        before=self.service.dispatch("review_start",dict(deck_ids=[self.french]))
+        after=self.service.dispatch("review_action",dict(session=before["session"],revision=before["revision"],
+            card_id=before["card_id"],action_id="learn-later",action="rate",rating=1))
+        self.assertIsNone(after["card_id"])
+        self.assertFalse(after["finished"])
+        self.assertGreater(after["next_due"],0)
+
+    def test_capture_rejects_another_collection_at_native_save_boundary(self):
+        with self.assertRaisesRegex(ValueError,"collection"):
+            self.service.add(dict(request=dict(request_id="wrong-profile",deck_id=1,expression="chien",language="fr",collection_id="another-collection"),
+                content=dict(front="the dog",back="le chien",language="fr")))
+        self.assertEqual(self.col.db.scalar("select count(*) from notes"),0)
+
 
 if __name__ == "__main__":
     unittest.main()

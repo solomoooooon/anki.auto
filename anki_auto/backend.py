@@ -1,4 +1,5 @@
 import argparse
+from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import hmac
@@ -72,6 +73,10 @@ class Application:
     def submit(self, payload):
         request = CaptureRequest.from_dict(payload)
         with self.lock:
+            collection = self.bridge.call("health", {})["collection_id"]
+            if request.collection_id and request.collection_id != collection:
+                raise ValueError("The Anki collection changed. Reopen this capture in the intended profile.")
+            request = replace(request, collection_id=collection)
             existing = self.store.job(request.request_id)
             if existing and existing["hash"] != Store.identity(request):
                 raise APIError("This capture ID belongs to a different draft", 409)
@@ -97,6 +102,8 @@ class Application:
                 return
             request = CaptureRequest.from_dict(job["payload"])
             self.store.update(identifier, "running")
+            if request.collection_id != self.bridge.call("health", {})["collection_id"]:
+                raise ValueError("The Anki collection changed. Open the original profile and retry.")
             # Anki's stable RequestId closes the save/HTTP-response crash window.
             already = self.bridge.call("capture_status", {"request_id": identifier})["capture"]
             if already:
@@ -114,6 +121,8 @@ class Application:
             with self.lock:
                 if self.store.job(identifier)["status"] == "cancelled":
                     return
+                if request.collection_id != self.bridge.call("health", {})["collection_id"]:
+                    raise ValueError("The Anki collection changed during generation. Open the original profile and retry.")
                 matched = self.check_matches(request)
                 self.store.update(identifier, "saving")
                 result = self.bridge.call("add", dict(request=request.to_dict(), content=content.to_dict(),

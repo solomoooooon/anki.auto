@@ -141,8 +141,9 @@ class ReviewSession:
             self.current_id = None
             self.current_card = None
             info = self.col.sched.congratulations_info()
-            return dict(base, card_id=None, finished=not counts["learning"],
-                next_due=getattr(info, "next_learn_due", 0))
+            counts["learning"] = info.learn_remaining
+            return dict(base, card_id=None, finished=not info.learn_remaining,
+                next_due=time.time() + info.secs_until_next_learn if info.learn_remaining else 0)
         item = queued.cards[0]
         card = Card(self.col, backend_card=item.card)
         if card.id != self.current_id:
@@ -204,10 +205,33 @@ class ReviewSession:
             self.persist(pending=action_id)
             marker = self.col.add_custom_undo_entry("anki.auto " + action)
             if action == "rate":
+                # Filtered answers charge their temporary deck. Preserve the native
+                # deltas in the home lineage using undoable deck operations.
+                home = card.odid or card.did
+                lineage = [home] + [deck["id"] for deck in self.col.decks.parents(home)]
+                keys = ("newToday", "revToday", "lrnToday", "timeToday")
+                def counters(did):
+                    deck = self.col.decks.get_legacy(did)
+                    return {key: deck.get(key, [self.day, 0])[1]
+                        if deck.get(key, [self.day, 0])[0] == self.day else 0 for key in keys}
+                before = {did:counters(did) for did in [self.deck_id] + lineage}
                 rating = (CardAnswer.AGAIN, CardAnswer.HARD, CardAnswer.GOOD, CardAnswer.EASY)[data["rating"] - 1]
                 answer = self.col.sched.build_answer(card=card, states=self.states, rating=rating)
                 answer.milliseconds_taken = min(max(0, int(elapsed)), card.time_limit())
                 self.col.sched.answer_card(answer)
+                filtered = counters(self.deck_id)
+                for did in lineage:
+                    actual = counters(did)
+                    deck = self.col.decks.get_legacy(did)
+                    changed = False
+                    for key in keys:
+                        delta = max(0, filtered[key] - before[self.deck_id][key])
+                        missing = max(0, delta - (actual[key] - before[did][key]))
+                        if missing:
+                            deck[key] = [self.day, actual[key] + missing]
+                            changed = True
+                    if changed:
+                        self.col.decks.update_dict(deck)
                 self.previous_card = card.id
             elif action in ("bury_card", "suspend_card"):
                 getattr(self.col.sched, action.replace("_card", "_cards"))([card.id])

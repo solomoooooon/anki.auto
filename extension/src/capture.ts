@@ -157,6 +157,8 @@ async function initialize(){
   ack=draft.duplicate_ack||"";exampleControls();
   try{
     const result=await api<Decks>("/decks");
+    if(draft.collection_id&&draft.collection_id!==result.collection_id)throw new Error("This draft belongs to another Anki collection. Open its original profile, or start a new capture.");
+    draft.collection_id=result.collection_id;
     for(const item of result.decks){const option=document.createElement("option");option.value=String(item.id);option.textContent=item.name;deck.append(option);}
     deck.value=String(draft.deck_id||stored.lastDeck||"");
     if(draft.job_id){setBusy(true);void poll(draft.job_id);}else void checkMatches();

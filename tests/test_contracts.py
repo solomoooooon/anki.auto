@@ -5,6 +5,12 @@ from anki_auto.matching import find_matches, fingerprint
 
 
 class ContractTests(unittest.TestCase):
+    def test_generated_fragment_has_ellipses_even_when_model_omits_them(self):
+        req=CaptureRequest.from_dict(dict(request_id="fragment",deck_id=1,expression="a voulu faire",language="fr"))
+        result=CardContent.from_dict(dict(front="wanted to do",back="a voulu faire",language="fr",fragment=True),req)
+        self.assertEqual(result.front,"…wanted to do…")
+        self.assertEqual(result.back,"…a voulu faire…")
+
     def request(self, **overrides):
         return CaptureRequest.from_dict(dict(request_id="capture-1", deck_id=7,
             expression="chien", language="fr", **overrides))

@@ -13,6 +13,10 @@ for(const entry of await readdir(path.join(root,"extension/src")))if(/\.(html|cs
 await copyFile(path.join(root,"extension/manifest.json"),path.join(out,"manifest.json"));
 async function copy(source,destination){await cp(path.join(root,"node_modules",source),path.join(out,"vendor",destination),{recursive:true});}
 await copy("pdfjs-dist/build/pdf.worker.mjs","pdf/pdf.worker.mjs");
+const viewerCSS=await readFile(path.join(root,"node_modules/pdfjs-dist/web/pdf_viewer.css"),"utf8");
+const textStart=viewerCSS.indexOf(".textLayer {"),textEnd=viewerCSS.indexOf(".annotationLayer {",textStart);
+if(textStart<0||textEnd<textStart)throw new Error("PDF.js text-layer stylesheet structure changed");
+await writeFile(path.join(out,"vendor/pdf/text-layer.css"),"/* PDF.js text layer; Apache-2.0. See licenses/pdfjs-dist-LICENSE. */\n"+viewerCSS.slice(textStart,textEnd));
 for(const name of ["cmaps","standard_fonts","wasm"])await copy("pdfjs-dist/"+name,"pdf/"+name);
 await copy("tesseract.js/dist/worker.min.js","ocr/worker.min.js");
 await copy("tesseract.js-core","ocr/core");

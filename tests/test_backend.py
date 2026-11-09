@@ -15,10 +15,11 @@ class BridgeFixture:
     def __init__(self):
         self.notes = {}
         self.records = []
+        self.collection_id = "collection-a"
 
     def call(self, action, payload):
         if action == "health":
-            return dict(profile="Disposable", connected=True)
+            return dict(profile="Disposable", connected=True, collection_id=self.collection_id)
         if action == "matches":
             matches = find_matches(payload["expression"], self.records)
             return dict(matches=matches, fingerprint=fingerprint(matches))
@@ -41,6 +42,25 @@ class NoRemote:
 
 
 class BackendTests(unittest.TestCase):
+    def test_profile_switch_during_generation_cannot_save_into_other_collection(self):
+        from anki_auto.contracts import CardContent
+        bridge=self.bridge
+        class SwitchingGenerator:
+            model="test"
+            def generate(self,request,cancelled=None):
+                bridge.collection_id="collection-b"
+                return CardContent(front="the dog",back="le chien",language="fr")
+        self.app.generator=SwitchingGenerator()
+        request=dict(request_id="profile-switch",deck_id=1,expression="chien",language="fr")
+        job=self.app.submit(request)
+        for _ in range(100):
+            row=self.app.store.job(job["id"])
+            if row["status"] in ("done","failed"):break
+            time.sleep(.02)
+        self.assertEqual(row["status"],"failed")
+        self.assertIn("collection",row["error"].lower())
+        self.assertEqual(bridge.notes,{})
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory()
         self.settings=Settings(self.temp.name)

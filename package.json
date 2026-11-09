@@ -9,6 +9,16 @@
     "test": "node --test extension/tests/*.test.mjs",
     "check": "npm run typecheck && npm test && npm run build && node scripts/check-artifacts.mjs"
   },
-  "devDependencies": {"@types/chrome": "0.3.7", "esbuild": "0.28.2", "typescript": "7.0.2"},
-  "dependencies": {"pdfjs-dist": "6.5.438", "tesseract.js": "7.0.0", "@tesseract.js-data/eng": "1.0.0", "@tesseract.js-data/fra": "1.0.0"}
+  "devDependencies": {
+    "@types/chrome": "0.3.7",
+    "esbuild": "0.28.2",
+    "jsdom": "31.0.0",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@tesseract.js-data/eng": "1.0.0",
+    "@tesseract.js-data/fra": "1.0.0",
+    "pdfjs-dist": "6.5.438",
+    "tesseract.js": "7.0.0"
+  }
 }

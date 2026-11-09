@@ -3,11 +3,12 @@ export interface Draft {
   language?:string; detected_language?:string; host_tab?:number; created?:number;
   request_id?:string; deck_id?:number; custom_definition?:string; add_example?:boolean;
   example_front?:string;example_back?:string;duplicate_ack?:string;job_id?:string;
+  collection_id?:string;
 }
 export interface Match {note_id:number;term:string;front:string;score:number}
 export interface Matches {matches:Match[];fingerprint:string;ack_token:string}
 export interface Deck {id:number;name:string;counts:{new:number;review:number;learning:number}}
-export interface Decks {profile:string;decks:Deck[]}
+export interface Decks {profile:string;collection_id:string;decks:Deck[]}
 export interface Saved {note_id:number;card_ids:number[];card_count:number;deck_name:string;front:string;back:string;example_front:string;example_back:string;language:string}
 export interface Job {id:string;status:string;error:string;result:Saved|Matches|null}
 export interface CardSnapshot {

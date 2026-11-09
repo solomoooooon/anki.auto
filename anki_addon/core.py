@@ -26,6 +26,7 @@ class AnkiService:
     def __init__(self, col, profile, state_path=None):
         self.col = col
         self.profile = profile
+        self.collection_id = hashlib.sha256((str(Path(col.path).resolve()) + "|" + profile).encode()).hexdigest()
         self.session = None
         self.state_path = Path(state_path) if state_path else Path(col.path).with_suffix(".anki-auto-session.json")
         try:
@@ -94,6 +95,8 @@ class AnkiService:
 
     def add(self, data):
         request = CaptureRequest.from_dict(data["request"])
+        if request.collection_id and request.collection_id != self.collection_id:
+            raise ValueError("The Anki collection changed before saving. Reopen the original profile.")
         content = CardContent.from_dict(data["content"], request)
         self.deck(request.deck_id)
         identity = request.to_dict()
@@ -126,12 +129,12 @@ class AnkiService:
             for child in node.children:
                 walk(child)
         walk(self.col.sched.deck_due_tree())
-        return dict(profile=self.profile, decks=[dict(id=row.id, name=row.name,
+        return dict(profile=self.profile, collection_id=self.collection_id, decks=[dict(id=row.id, name=row.name,
             counts=counts.get(row.id, {})) for row in self.col.decks.all_names_and_ids(include_filtered=False)])
 
     def dispatch(self, action, data):
         if action == "health":
-            return dict(profile=self.profile, connected=True, recovery=bool(self.recovery),
+            return dict(profile=self.profile, collection_id=self.collection_id, connected=True, recovery=bool(self.recovery),
                 session=self.session.token if self.session else None)
         if action == "decks":
             return self.decks()

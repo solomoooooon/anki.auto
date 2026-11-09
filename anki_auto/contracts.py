@@ -26,6 +26,7 @@ class CaptureRequest:
     source_url: str = ""
     source_title: str = ""
     duplicate_ack: str = ""
+    collection_id: str = ""
 
     @classmethod
     def from_dict(cls, data):
@@ -36,7 +37,7 @@ class CaptureRequest:
         for name, limit, required in (("request_id", 100, True), ("expression", 1000, True),
                 ("context", 8000, False), ("custom_definition", 4000, False),
                 ("example_front", 2000, False), ("example_back", 2000, False),
-                ("source_url", 4000, False), ("source_title", 500, False), ("duplicate_ack", 128, False)):
+                ("source_url", 4000, False), ("source_title", 500, False), ("duplicate_ack", 128, False), ("collection_id",128,False)):
             values[name] = text(data.get(name, ""), name, limit, required)
         if not re.fullmatch(r"[A-Za-z0-9_-]+", values["request_id"]):
             raise ValueError("Invalid request_id")
@@ -81,6 +82,9 @@ class CardContent:
                 raise ValueError("Both example sentences are required")
         else:
             values["example_front"] = values["example_back"] = ""
+        if data.get("fragment") is True:
+            for side in ("front", "back"):
+                values[side] = "…" + values[side].strip(" .…") + "…"
         return cls(language=language, **values)
 
     def to_dict(self):
@@ -100,5 +104,6 @@ def manual_content(request):
 
 
 CONTENT_SCHEMA = {"type": "object", "properties": {
-    key: {"type": "string"} for key in ("front", "back", "language", "example_front", "example_back")},
-    "required": ["front", "back", "language", "example_front", "example_back"], "additionalProperties": False}
+    **{key: {"type": "string"} for key in ("front", "back", "language", "example_front", "example_back")},
+    "fragment": {"type":"boolean"}},
+    "required": ["front", "back", "language", "example_front", "example_back", "fragment"], "additionalProperties": False}
