@@ -26,7 +26,7 @@ Computer-use verification was blocked by a host failure enforcing the current br
 
 A read-only fresh reviewer examined commits `3516c4f..d48b861`. Four blockers were reproduced or traced: home daily counters, a delayed-render rating race, missing PDF.js 6 text-layer geometry, and pending learning reported as finished. All entered the fix pass with failing regressions first. The profile-switch path that the reviewer set aside was reproduced with backend/native save tests and guarded at both boundaries.
 
-Other reviewed behavior stands: server-bound duplicate acknowledgments, sibling request replay, overlap deduplication and stale token/revision guards. Actual Chrome focus behavior, frame clipping, crop interaction and visual appearance remain in the manual checklist above. Generation has independent live smoke evidence; account billing controls remain outside the app. GitHub publishing depends on the user’s connection and is separate from code readiness.
+Other reviewed behavior stands: server-bound duplicate acknowledgments, sibling request replay, overlap deduplication and stale token/revision guards. Actual Chrome focus behavior, frame clipping, crop interaction and visual appearance remain in the manual checklist above. Generation has independent live smoke evidence; account billing controls remain outside the app. Public repository: https://github.com/solomoooooon/anki.auto (created and published at the user’s request).
 
 ## Rulings made during implementation
 
@@ -37,7 +37,7 @@ Other reviewed behavior stands: server-bound duplicate acknowledgments, sibling 
 - Existing card JavaScript, native TTS, video and MathJax remain unsupported. Basic HTML/CSS/local images/audio render in a scriptless iframe; complex decks should use desktop Anki.
 - Deliver CMD/Python setup/start scripts instead of PowerShell helpers. This keeps startup usable under default Windows execution policy; prerequisites are still installed separately.
 - Preserve Anki’s native filtered-deck per-answer counter deltas in the home lineage through undoable native deck updates. The native rating still supplies all intervals and review history. Regression tests cover undo and repeated sessions.
-- Keep the feature branch and project in place while GitHub authentication is pending. The user explicitly requested publication, so no additional merge/PR approval menu is needed; no unknown remote is created or overwritten.
+- Keep the feature branch and project in place, and publish to the user-requested new public GitHub repository. The user explicitly requested publication, so no additional merge/PR approval menu is needed; no existing remote was overwritten.
 
 ## Deferred minor findings
 
