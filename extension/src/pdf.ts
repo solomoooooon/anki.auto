@@ -49,7 +49,14 @@ marker.onclick=async()=>{
     const overlay=document.createElement("div");overlay.className="capture-overlay";
     const frame=document.createElement("iframe");frame.src=value.url;frame.title="Add vocabulary to Anki";overlay.append(frame);document.body.append(overlay);
     const close=()=>{overlay.remove();window.removeEventListener("message",listener);};
-    const listener=(event:MessageEvent)=>{if(event.source===frame.contentWindow&&event.origin===location.origin&&event.data?.kind==="anki-auto-close"&&event.data.id===value.id)close();};
+    const listener=(event:MessageEvent)=>{
+      if(event.source!==frame.contentWindow||event.origin!==location.origin||event.data?.id!==value.id)return;
+      if(event.data.kind==="anki-auto-close")close();
+      if(event.data.kind==="anki-auto-size"&&Number.isFinite(event.data.width)&&Number.isFinite(event.data.height)){
+        frame.style.width=Math.min(innerWidth-36,Math.max(320,event.data.width))+"px";
+        frame.style.height=Math.min(innerHeight-36,Math.max(200,event.data.height))+"px";
+      }
+    };
     window.addEventListener("message",listener);overlay.onclick=event=>{if(event.target===overlay)close();};marker.hidden=true;
   }catch(error){notify(error);}
 };

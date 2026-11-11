@@ -1,0 +1,21 @@
+.capture-page .page{margin:16px auto;padding:0 12px;max-width:750px}
+.capture-page .panel{padding:16px}
+.capture-page h2{margin:0;font-size:18px}
+.capture-page .row.between{margin-bottom:12px}
+.capture-page .field{margin-bottom:10px}
+.capture-page .field>span{margin-bottom:4px}
+.capture-page input:not([type=checkbox]),.capture-page select{padding:6px 9px}
+.capture-page textarea{min-height:56px;max-height:100px;padding:7px 9px}
+.capture-page details{margin:0 0 10px}
+.capture-page summary{margin:0;font-size:13px}
+.capture-page details[open]>label,.capture-page details[open]>textarea{margin-top:8px}
+.capture-page .check{margin:12px 0}
+.capture-page .two{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.capture-page .capture-layout,.capture-page.modal-body .capture-layout{grid-template-columns:minmax(0,420px) minmax(0,240px);gap:12px}
+.capture-page .capture-layout.single,.capture-page.modal-body .capture-layout.single{grid-template-columns:minmax(0,420px)}
+.capture-page.modal-body{padding:12px}
+.capture-page.modal-body .page{margin:0;padding:0}
+.capture-page .status:empty{display:none}
+.capture-page .actions{margin-top:12px}
+.capture-page .match-panel{max-height:350px;overflow:auto}
+@media(max-width:680px){.capture-page .capture-layout,.capture-page.modal-body .capture-layout{grid-template-columns:minmax(0,420px)}}

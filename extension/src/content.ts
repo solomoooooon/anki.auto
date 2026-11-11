@@ -7,7 +7,7 @@ const host=document.createElement("div");
 host.style.cssText="all:initial;position:fixed;inset:0;pointer-events:none;z-index:2147483647;";
 const root=host.attachShadow({mode:"closed"});
 const style=document.createElement("style");
-style.textContent=`button{position:fixed;width:32px;height:32px;border:0;border-radius:7px;background:#315b43;color:white;font:20px system-ui;cursor:pointer;pointer-events:auto;box-shadow:0 2px 12px #0003} .overlay{position:fixed;inset:0;pointer-events:auto;background:#0004;display:flex;align-items:center;justify-content:center;padding:18px} iframe{border:0;background:transparent;width:min(850px,100%);height:min(780px,95vh);border-radius:12px;box-shadow:0 20px 80px #0004} [hidden]{display:none!important}`;
+style.textContent=`button{position:fixed;width:32px;height:32px;border:0;border-radius:7px;background:#315b43;color:white;font:20px system-ui;cursor:pointer;pointer-events:auto;box-shadow:0 2px 12px #0003} .overlay{position:fixed;inset:0;pointer-events:auto;background:#0004;display:flex;align-items:center;justify-content:center;padding:18px} iframe{border:0;background:transparent;width:min(460px,100%);height:min(440px,95vh);max-width:100%;max-height:calc(100vh - 36px);border-radius:12px;box-shadow:0 20px 80px #0004} [hidden]{display:none!important}`;
 const marker=document.createElement("button");marker.textContent="✓";marker.title="Add to Anki";marker.setAttribute("aria-label","Add selected text to Anki");marker.hidden=true;
 const overlay=document.createElement("div");overlay.className="overlay";overlay.hidden=true;
 root.append(style,marker,overlay);
@@ -49,6 +49,14 @@ document.addEventListener("keyup",event=>{if(event.key==="Escape")dismiss();else
 window.addEventListener("scroll",update,{passive:true});
 window.addEventListener("resize",update);
 overlay.addEventListener("click",event=>{if(event.target===overlay)dismiss();});
+window.addEventListener("message",event=>{
+  const frame=overlay.querySelector("iframe");
+  if(!frame||event.source!==frame.contentWindow||event.origin!==chrome.runtime.getURL("").slice(0,-1)||event.data?.id!==draftId||event.data.kind!=="anki-auto-size")return;
+  const {width,height}=event.data;
+  if(!Number.isFinite(width)||!Number.isFinite(height))return;
+  frame.style.width=Math.min(innerWidth-36,Math.max(320,width))+"px";
+  frame.style.height=Math.min(innerHeight-36,Math.max(200,height))+"px";
+});
 chrome.storage.onChanged.addListener((changes,area)=>{if(area==="local"&&changes.enabled){enabled=Boolean(changes.enabled.newValue);if(!enabled)dismiss();}});
 chrome.runtime.onMessage.addListener((msg,_sender,reply)=>{
   if(msg.kind==="dismiss_capture"&&msg.id===draftId)dismiss();

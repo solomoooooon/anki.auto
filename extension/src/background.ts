@@ -1,4 +1,34 @@
-import type {Draft} from "./api";
+import type {Draft,Job,CaptureTask} from "./api";
+
+const waiting=(status:string)=>["queued","running","saving"].includes(status);
+const attention=(status:string)=>["failed","needs_confirmation"].includes(status);
+let storageWork:Promise<unknown>=Promise.resolve();
+function serial<T>(work:()=>Promise<T>):Promise<T>{
+  const result=storageWork.then(work,work);storageWork=result.catch(()=>{});return result;
+}
+async function tasks():Promise<CaptureTask[]>{const stored=await chrome.storage.local.get("captureJobs");return Array.isArray(stored.captureJobs)?stored.captureJobs:[];}
+async function badge(jobs:CaptureTask[]){
+  const failed=jobs.some(job=>attention(job.status));
+  const pending=jobs.filter(job=>waiting(job.status)).length;
+  await chrome.action.setBadgeText({text:failed?"!":pending?String(pending):""});
+  await chrome.action.setBadgeBackgroundColor({color:failed?"#a53c32":"#315b43"});
+  if(pending){if(!await chrome.alarms.get("capture-jobs"))await chrome.alarms.create("capture-jobs",{periodInMinutes:.5});}
+  else await chrome.alarms.clear("capture-jobs");
+}
+async function history(){
+  const previous=await tasks();
+  const updates=await Promise.all(previous.filter(job=>waiting(job.status)).map(async task=>{
+    try{const response=await request("/jobs/"+task.id,"GET",undefined);return response.ok?{...task,status:response.result.status,error:response.result.error||""}:task;}catch{return task;}
+  }));
+  return serial(async()=>{
+    const latest=await tasks();
+    for(const update of updates){const index=latest.findIndex(task=>task.id===update.id&&task.queued_at===update.queued_at&&waiting(task.status));if(index>=0)latest[index]=update;}
+    await chrome.storage.local.set({captureJobs:latest});await badge(latest);return latest;
+  });
+}
+chrome.alarms.onAlarm.addListener(alarm=>{if(alarm.name==="capture-jobs")return history().then(()=>{}).catch(()=>{});});
+chrome.runtime.onStartup.addListener(()=>void history().catch(()=>{}));
+void history().catch(()=>{});
 
 const own=(sender:chrome.runtime.MessageSender)=>sender.url?.startsWith(chrome.runtime.getURL(""));
 async function request(path:string,method:string,data:unknown) {
@@ -17,10 +47,13 @@ async function request(path:string,method:string,data:unknown) {
 
 async function draftStore(draft:Draft) {
   const id=crypto.randomUUID();
-  const stored=await chrome.storage.local.get("draftIds");
+  const stored=await chrome.storage.local.get(["draftIds","captureJobs"]);
   const ids:string[]=Array.isArray(stored.draftIds)?stored.draftIds:[];
   ids.push(id);
-  if(ids.length>15)await chrome.storage.local.remove(ids.splice(0,ids.length-15).map(old=>"draft:"+old));
+  const retained=new Set((Array.isArray(stored.captureJobs)?stored.captureJobs:[]).map((job:CaptureTask)=>job.draft_id));
+  const removed:string[]=[];
+  for(const old of [...ids])if(ids.length>15&&!retained.has(old)){ids.splice(ids.indexOf(old),1);removed.push("draft:"+old);}
+  if(removed.length)await chrome.storage.local.remove(removed);
   await chrome.storage.local.set({["draft:"+id]:{...draft,created:Date.now()},draftIds:ids,lastDraft:id});
   return id;
 }
@@ -42,6 +75,21 @@ chrome.runtime.onMessage.addListener((msg,sender,reply)=>{
       return {ok:true,result:{id,url,displayed}};
     }
     if(!own(sender))throw new Error("This operation is available only inside the extension.");
+    if(msg.kind==="queue_capture"){
+      if(typeof msg.id!=="string"||!/^[-\w]{1,100}$/.test(msg.id))throw new Error("Invalid capture draft");
+      const response=await request("/captures","POST",msg.draft);
+      if(!response.ok)return response;
+      const job=response.result as Job;
+      await serial(async()=>{
+        const jobs=(await tasks()).filter(task=>task.id!==job.id&&task.draft_id!==msg.id);
+        jobs.unshift({id:job.id,draft_id:msg.id,expression:String(msg.draft.expression),deck_name:String(msg.deck_name||""),status:job.status,error:job.error||"",queued_at:Date.now()});
+        let completed=0;const kept=jobs.filter(task=>waiting(task.status)||attention(task.status)||++completed<=30);
+        await chrome.storage.local.set({["draft:"+msg.id]:{...msg.draft,job_id:job.id},lastDraft:msg.id,captureJobs:kept});
+        await badge(kept);
+      });
+      return response;
+    }
+    if(msg.kind==="capture_history")return {ok:true,result:await history()};
     if(msg.kind==="api")return request(msg.path,msg.method,msg.data);
     if(msg.kind==="create_draft"){
       const id=await draftStore(msg.draft);

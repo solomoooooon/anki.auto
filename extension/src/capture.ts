@@ -12,6 +12,14 @@ const fieldset=element<HTMLFieldSetElement>("fields");
 const deck=element<HTMLSelectElement>("deck"),language=element<HTMLSelectElement>("language");
 const close=async()=>{await message({kind:"close_capture",id}).catch(()=>{});if(params.has("modal"))parent.postMessage({kind:"anki-auto-close",id},"*");else window.close();};
 if(params.has("modal"))document.body.classList.add("modal-body");
+function fitModal(){
+  if(!params.has("modal"))return;
+  const wide=!element("matches").hidden;
+  parent.postMessage({kind:"anki-auto-size",id,width:wide?730:460,
+    height:Math.ceil(document.querySelector("main")!.getBoundingClientRect().height)+24},"*");
+}
+new ResizeObserver(fitModal).observe(document.querySelector("main")!);
+window.addEventListener("resize",fitModal);
 
 function values():Draft {
   return {...draft,expression:input("expression").value.trim(),context:element<HTMLTextAreaElement>("context").value,
@@ -98,16 +106,17 @@ async function poll(jobId:string){
 }
 async function send(){
   if(busy||!form.reportValidity())return;
+  setBusy(true);
   pendingSend=true;
   try{
     await checkMatches();
-    if(matches?.matches.length&&!ack){showMatches(matches);element("continue").focus();return;}
+    if(matches?.matches.length&&!ack){setBusy(false);showMatches(matches);element("continue").focus();return;}
     const current=values();
     if(current.custom_definition&&current.language==="auto"&&!current.detected_language)throw new Error("Choose English or French when entering a custom definition.");
     draft={...current,request_id:draft.request_id||crypto.randomUUID()};
-    await persist();setBusy(true);element("status").textContent="Preparing your card…";
-    const job=await api<Job>("/captures",{...draft,retry:true});
-    draft.job_id=job.id;await persist();void poll(job.id);
+    await persist();setBusy(true);element("status").textContent="Adding to queue…";
+    const job=await message<Job>({kind:"queue_capture",id,draft:{...draft,retry:true},deck_name:deck.selectedOptions[0]?.textContent||""});
+    draft.job_id=job.id;await persist();await close();
   }catch(error){
     setBusy(false);
     if(error instanceof LocalError&&error.status===409&&error.details){ack="";showMatches(error.details);pendingSend=true;}
@@ -151,6 +160,7 @@ async function initialize(){
   input("expression").value=draft.expression;
   element<HTMLTextAreaElement>("context").value=draft.context;
   element<HTMLTextAreaElement>("definition").value=draft.custom_definition||"";
+  element<HTMLDetailsElement>("custom-definition").open=Boolean(draft.custom_definition);
   element<HTMLTextAreaElement>("example-front").value=draft.example_front||"";
   element<HTMLTextAreaElement>("example-back").value=draft.example_back||"";
   language.value=draft.language||"auto";input("example").checked=Boolean(draft.add_example);

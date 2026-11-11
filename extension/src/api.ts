@@ -11,6 +11,7 @@ export interface Deck {id:number;name:string;counts:{new:number;review:number;le
 export interface Decks {profile:string;collection_id:string;decks:Deck[]}
 export interface Saved {note_id:number;card_ids:number[];card_count:number;deck_name:string;front:string;back:string;example_front:string;example_back:string;language:string}
 export interface Job {id:string;status:string;error:string;result:Saved|Matches|null}
+export interface CaptureTask {id:string;draft_id:string;expression:string;deck_name:string;status:string;error:string;queued_at:number}
 export interface CardSnapshot {
   active:boolean;session:string;revision:number;card_id:number|null;note_id:number;modified:number;
   front:string;back:string;css:string;home_deck:string;language:string;fields:Record<string,string>;
@@ -34,7 +35,12 @@ export function element<T extends HTMLElement=HTMLElement>(id:string):T {
   if(!value)throw new Error("Missing element: "+id);
   return value as T;
 }
+export function userError(error:unknown):string {
+  const value=error instanceof Error?error.message:String(error);
+  if(/\{\s*"/.test(value)||value.includes("Codex could not generate"))return "Couldn’t complete this action. Check Settings and try again.";
+  return value;
+}
 export function notify(error:unknown,id="status") {
-  element(id).textContent=error instanceof Error?error.message:String(error);
+  element(id).textContent=userError(error);
 }
 export const input=(id:string)=>(element<HTMLInputElement>(id));

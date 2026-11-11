@@ -14,10 +14,12 @@ element<HTMLFormElement>("pair").onsubmit=async event=>{
 async function check(){
   try{
     const health=await api<{bridge:{connected:boolean;profile?:string;error?:string};model:string}>("/health");
+    if(!health.bridge)throw new Error("Pair this extension with Anki first.");
     if(!health.bridge.connected)throw new Error(health.bridge.error||"Open Anki and install the bundled add-on.");
-    element("status").textContent=`Anki connected: ${health.bridge.profile}. Checking Codex…`;
-    const codex=await api<Record<string,unknown>>("/codex/status");
-    element("status").textContent=`Anki connected: ${health.bridge.profile}.\n${JSON.stringify(codex)}\nModel: ${health.model}`;
+    element("status").textContent=`Anki connected: ${health.bridge.profile}. Checking automatic definitions…`;
+    const codex=await api<{authenticated:boolean}>("/codex/status");
+    if(!codex.authenticated)throw new Error("Sign in to enable automatic definitions.");
+    element("status").textContent=`Anki connected: ${health.bridge.profile}.\nAutomatic definitions are ready.`;
   }catch(error){notify(error);}
 }
 element("check").onclick=check;

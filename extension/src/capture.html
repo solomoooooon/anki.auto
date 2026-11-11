@@ -1,9 +1,9 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Add vocabulary · anki.auto</title><link rel="stylesheet" href="style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Add vocabulary · anki.auto</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="capture.css"></head><body class="capture-page">
 <main class="page"><div id="capture-layout" class="capture-layout single">
 <form id="capture-form" class="panel"><div class="row between"><h2>New card</h2><button type="button" class="quiet" id="close" aria-label="Close">×</button></div>
 <fieldset id="fields"><label class="field"><span>Word or expression</span><input id="expression" maxlength="1000" required autofocus></label>
 <div class="two"><label class="field"><span>Destination deck</span><select id="deck" required><option value="">Choose a deck</option></select></label><label class="field"><span>Language</span><select id="language"><option value="auto">Auto</option><option value="fr">French</option><option value="en">English</option></select></label></div>
-<label class="field"><span>Custom definition <small>(optional)</small></span><textarea id="definition" maxlength="4000" placeholder="Leave blank to generate on Send"></textarea><small>Your definition skips automatic lookup.</small></label>
+<details id="custom-definition"><summary>Custom definition <small>(optional)</small></summary><label class="field"><textarea id="definition" aria-label="Custom definition" maxlength="4000" placeholder="Your meaning skips automatic lookup"></textarea></label></details>
 <label class="check"><input type="checkbox" id="example">Add example</label>
 <div id="manual-example" hidden><p class="hint">Enter your example pair to keep model calls off.</p><label class="field"><span>Example front · English sentence</span><textarea id="example-front" maxlength="2000"></textarea></label><label class="field"><span>Example back · French translation</span><textarea id="example-back" maxlength="2000"></textarea></label></div>
 <details><summary>Sentence context</summary><textarea id="context" maxlength="8000" aria-label="Sentence context"></textarea></details>

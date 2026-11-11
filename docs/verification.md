@@ -7,13 +7,14 @@
 - The packaged `.ankiaddon` was extracted into a temporary directory, compiled/imported with its bundled shared modules, and used against a disposable collection.
 - Local Tesseract English/French data recognized a generated image as `Le chien attend devant la porte.` No network language downloads were used.
 - Live subscription-authenticated Codex generated `the dog` / `le chien` with a French example, an idiom with literal meaning, and `…wanted to do the same thing…` / `…a voulu faire la même chose…`. Model: `gpt-5.6-luna`. The fragment result is normalized from a structured classification rather than relying on the model to retain punctuation.
+- November 11 capture refinement: controller tests cover readable connection status, compact optional controls, trusted iframe sizing, closing as soon as a queue request is accepted, keeping failed submissions open, preserving duplicate confirmation, and background failures remaining recoverable after newer successes. A focused review found and a RED→GREEN regression fixed older unresolved captures being hidden/pruned. Actual Chrome sizing is still part of the manual check.
 
 ## Chrome interaction checks still required
 
 Computer-use verification was blocked by a host failure enforcing the current browser URL. These are **unverified**, not passing acceptance checks. No actual user collection was changed during testing.
 
 1. Install the add-on, restart Anki, load the built unpacked extension and pair it. Verify both the Anki connection and Codex sign-in in Settings.
-2. Enable capture on an article; select `chien` with surrounding French context. Confirm the marker, modal, deck selection, Send result and saved Anki note.
+2. Enable capture on an article; select `chien` with surrounding French context. Confirm the marker and compact modal. Send should close it once queued; check Recent captures and the saved Anki note after background generation finishes.
 3. Repeat with Custom definition, then with Add example. Confirm one versus two cards, correct articles, and no generation in custom mode.
 4. Capture an existing term, see the destination-deck alert, change the deck/term and confirm that the old acknowledgment cannot be reused.
 5. Select text inside an embedded frame, near all viewport edges, and after scrolling a long article. Confirm the modal covers the top page and drafts survive closure.

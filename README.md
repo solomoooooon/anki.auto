@@ -18,7 +18,7 @@ Requires **Anki 25.09.5 or compatible newer desktop Anki**, **Python 3.11+**, **
 
    Choose **ChatGPT sign-in**. An open ChatGPT tab is unnecessary. Custom definitions work without Codex.
 5. Run `start.cmd`. Keep the console and Anki open. In extension **Settings**, enter the console’s one-time pairing code. Codes expire in 10 minutes; restarting the backend supplies a new one.
-6. Use the toolbar toggle to enable highlighting. Select words, click **✓**, choose the destination deck, and **Send**. The modal stays open with the saved front/back and an **Edit saved note** action.
+6. Use the toolbar toggle to enable highlighting. Select words, click **✓**, choose the destination deck, and **Send**. The compact modal closes as soon as the local queue accepts the capture. Translation and saving continue in the background. Open the extension’s **Recent captures** to check progress or open the saved card.
 
 ## Capture
 
@@ -27,7 +27,8 @@ Requires **Anki 25.09.5 or compatible newer desktop Anki**, **Python 3.11+**, **
 - **Custom definition** becomes the front; the editable selection becomes the back. It skips generation entirely. Choose the source language if automatic detection is unavailable. Add an article yourself when editing a custom French noun.
 - **Add example** adds a second card from the same note: English sentence / French sentence using the selected expression. This applies to French vocabulary only. With a custom definition, enter both example sentences yourself; no model is called.
 - Similar expressions are checked only in the exact destination deck, including cards temporarily being reviewed in a filtered deck. An alert shows near matches and asks **Continue anyway**. Changing the term/deck or a matching note requires another confirmation. It never silently merges cards.
-- Captures retain their draft, job ID, and result across tab closure. **Reopen last capture** resumes it. Retrying an uncertain save uses the same request ID to prevent duplicate notes. Editing the draft creates a new capture ID.
+- Custom definition and sentence context are expandable controls so the normal capture form stays compact. The article/PDF overlay fits the form’s current size instead of occupying most of the screen.
+- Captures retain their draft, job ID, and result across tab closure. **Recent captures** shows queued, preparing, saved or needs-attention status; click an entry to view/edit its card or resolve an error. The toolbar badge shows the pending count, or **!** for a failure/confirmation that needs attention. **Reopen last capture** also resumes the latest one. Retrying an uncertain save uses the same request ID to prevent duplicate notes. Editing the draft creates a new capture ID.
 - Anki must be open. If Anki is busy with a blocking dialog, close it and retry. The active Anki profile determines which collection is used.
 - Each capture is bound to the collection from which its destination was selected. Switching profiles while generation runs stops the save; reopen the original profile and retry.
 
