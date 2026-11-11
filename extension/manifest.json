@@ -10,5 +10,5 @@
   "options_page": "settings.html",
   "content_scripts": [{"matches": ["http://*/*", "https://*/*", "file:///*"], "js": ["content.js"], "all_frames": true, "match_about_blank": true}],
   "web_accessible_resources": [{"resources": ["capture.html", "capture.js", "style.css"], "matches": ["http://*/*", "https://*/*", "file:///*"]}],
-  "content_security_policy": {"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self' blob:;"}
+  "content_security_policy": {"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self';"}
 }

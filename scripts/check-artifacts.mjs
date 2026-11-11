@@ -3,6 +3,10 @@ import path from "node:path";
 import {fileURLToPath} from "node:url";
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"../dist/extension");
 const manifest=JSON.parse(await readFile(path.join(root,"manifest.json"),"utf8"));
+const policy=new Map(manifest.content_security_policy.extension_pages.split(";").filter(rule=>rule.trim()).map(rule=>{
+  const [directive,...sources]=rule.trim().split(/\s+/);return [directive,sources];
+}));
+if(policy.get("worker-src")?.some(source=>source!=="'self'"))throw new Error("Chrome MV3 workers must load from packaged extension files; worker-src contains a disallowed source");
 const required=[manifest.background.service_worker,manifest.action.default_popup,manifest.options_page,
   ...manifest.content_scripts.flatMap(s=>s.js),...manifest.web_accessible_resources.flatMap(s=>s.resources),
   "capture.html","review.html","pdf.html","ocr.html","vendor/pdf/pdf.worker.mjs","vendor/ocr/worker.min.js",
