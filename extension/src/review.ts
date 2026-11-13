@@ -1,6 +1,7 @@
 import {api,element,notify,type CardSnapshot,type Decks} from "./api";
 import {reviewShortcut} from "./shortcuts";
-import {cardDocument} from "./card-document";
+import {cardDocument,applyCardTheme} from "./card-document";
+import {currentTheme} from "./theme";
 let snapshot:CardSnapshot|null=null,answerVisible=false,busy=false,blocked=false,started=performance.now(),renderSequence=0;
 let pending:Record<string,unknown>|null=null;
 let pollTimer:ReturnType<typeof setTimeout>;
@@ -44,10 +45,16 @@ async function renderCard(){
     if(seq!==renderSequence){resolve();return;}
     const document=frame.contentDocument;if(!document)return;
     if(document.documentElement.getAttribute("data-anki-render")!==String(seq))return;
+    applyCardTheme(document,currentTheme());
     frame.hidden=false;
-    frame.style.height=Math.max(170,document.documentElement.scrollHeight+16)+"px";
+    const fit=()=>{
+      // Measure content from a collapsed viewport; otherwise each reveal adds height.
+      frame.style.height="1px";
+      frame.style.height=Math.max(220,document.documentElement.scrollHeight)+"px";
+    };
+    fit();
     document.addEventListener("keydown",onKey);
-    const images=document.querySelectorAll("img");images.forEach(img=>img.onload=()=>frame.style.height=Math.max(170,document.documentElement.scrollHeight+16)+"px");
+    const images=document.querySelectorAll("img");images.forEach(img=>img.onload=fit);
     resolve();
   };
   frame.srcdoc=html.replace("<html",`<html data-anki-render="${seq}"`);
